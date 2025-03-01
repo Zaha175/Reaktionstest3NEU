@@ -1,78 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaktionstest: Pfeil & Kreuz</title>
     <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            font-family: Arial, sans-serif;
+        }
+
         #test-container {
             position: relative;
-            width: 400px;
-            height: 500px;
-            border: 2px solid #333;
-            margin: 20px auto;
+            width: 800px;
+            height: 600px;
+            border: 4px solid #ff6b6b;
+            border-radius: 15px;
+            background: linear-gradient(to bottom, #ffffff, #fff1e6);
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 20px;
-            background: #fff;
+            padding: 30px;
+            transition: background 0.3s;
             user-select: none;
         }
 
         #stats {
             position: absolute;
             top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #f1c40f;
+            color: white;
+            border-radius: 8px;
+            font-size: 1.3em;
+        }
+
+        #progress {
+            position: absolute;
+            top: 70px;
             width: 80%;
             text-align: center;
-            font-size: 16px;
-            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+            color: #7f8c8d;
         }
 
         #arrow {
-            font-size: 48px;
+            font-size: 6em;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             visibility: hidden;
+            color: #e74c3c;
+            transition: transform 0.2s ease;
         }
 
         #cross {
-            font-size: 32px;
+            font-size: 4em;
             position: absolute;
             visibility: hidden;
+            color: #2980b9;
+            transition: opacity 0.2s ease;
         }
 
         #message {
             position: absolute;
-            bottom: 30px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 18px;
+            font-size: 1.5em;
             font-family: Arial, sans-serif;
             background: rgba(255, 255, 255, 0.9);
-            padding: 5px 15px;
-            border-radius: 5px;
+            padding: 10px 20px;
+            border-radius: 10px;
             white-space: nowrap;
-            z-index: 10;
             text-align: center;
+            color: #2c3e50;
         }
 
-        .instruction {
-            font-size: 16px;
-            margin: 10px;
-            text-align: center;
-        }
-
-        #progress {
+        #key-guide {
             position: absolute;
-            top: 50px;
-            width: 80%;
-            text-align: center;
-            font-size: 14px;
-            color: #666;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            font-size: 1.2em;
+            color: #2c3e50;
         }
 
-        .feedback {
-            color: #d00;
+        .key {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 2px;
+            background: #ecf0f1;
+            border-radius: 5px;
             font-weight: bold;
         }
 
@@ -85,8 +115,15 @@
 </head>
 <body>
     <div id="test-container">
-        <div id="stats"></div>
+        <div id="stats">Phase: Übung | 0/5 | Fehler: 0</div>
         <div id="progress"></div>
+        <div id="key-guide">
+            Nutze: 
+            <span class="key">↑</span>
+            <span class="key">↓</span>
+            <span class="key">←</span>
+            <span class="key">→</span>
+        </div>
         <div id="arrow">→</div>
         <div id="cross">×</div>
         <div id="message"></div>
@@ -99,46 +136,47 @@
         const arrow = document.getElementById('arrow');
         const cross = document.getElementById('cross');
         const message = document.getElementById('message');
-        
+
         let state = 'instruction';
         let instructionStep = 0;
         let startTime;
         let arrowDirection;
         let crossPosition;
-        let currentPhase = 'instruction'; // instruction, practice, test
+        let currentPhase = 'instruction';
         let practiceResults = [];
         let testResults = [];
         let expectedResponses = [];
         let userResponses = [];
         let practiceAttempts = 0;
-        
+        let errors = 0;
+
         const instructions = [
-            "Willkommen zum Reaktionstest!",
-            "Sie sehen gleich zwei Symbole: einen Pfeil in der Mitte und ein Kreuz am Rand.",
-            "Reagieren Sie zuerst auf die Pfeilrichtung, dann auf die Position des Kreuzes.",
-            "Benutzen Sie die Pfeiltasten ↑, →, ↓, ← für beide Reaktionen.",
-            "Übungsphase beginnt... Bereit?"
+            "Willkommen zum Reaktionstest: Pfeil & Kreuz!",
+            "Reagiere zuerst auf die Pfeilrichtung mit ↑↓←→",
+            "Dann auf die Kreuzposition mit ↑↓←→",
+            "Übungsphase: 5 Durchgänge, max. 2 Fehler",
+            "Klick zum Starten der Übung!"
         ];
 
         function setPosition(element, position) {
-            element.style.top = '50%';
-            element.style.left = '50%';
+            element.style.top = '';
+            element.style.left = '';
             switch(position) {
                 case '↑':
-                    element.style.top = '10%';
+                    element.style.top = '50px';
                     element.style.left = '50%';
                     break;
-                case '→':
-                    element.style.top = '50%';
-                    element.style.left = '90%';
-                    break;
                 case '↓':
-                    element.style.top = '90%';
+                    element.style.top = '550px';
                     element.style.left = '50%';
                     break;
                 case '←':
+                    element.style.left = '50px';
                     element.style.top = '50%';
-                    element.style.left = '10%';
+                    break;
+                case '→':
+                    element.style.left = '750px';
+                    element.style.top = '50%';
                     break;
             }
             element.style.transform = 'translate(-50%, -50%)';
@@ -161,22 +199,26 @@
         function startPracticePhase() {
             currentPhase = 'practice';
             practiceResults = [];
-            message.textContent = 'Übungsphase: Klicken Sie zum Start';
+            errors = 0;
+            message.textContent = 'Übungsphase: Klick zum Start';
             state = 'ready';
-            progress.textContent = 'Übungsphase: 0/5 Durchgänge';
+            updateStats();
+            progress.textContent = 'Übung: 0/5';
         }
 
         function startTestPhase() {
             currentPhase = 'test';
             testResults = [];
-            message.textContent = 'Testphase: Klicken Sie zum Start';
+            errors = 0;
+            message.textContent = 'Testphase: Klick zum Start';
             state = 'ready';
-            progress.textContent = 'Testphase: 0/10 Durchgänge';
+            updateStats();
+            progress.textContent = 'Test: 0/10';
         }
 
         function startTrial() {
             state = 'waiting_first';
-            message.textContent = '';
+            message.textContent = 'Warte auf die Symbole...';
             arrow.style.visibility = 'hidden';
             cross.style.visibility = 'hidden';
             
@@ -188,24 +230,41 @@
                 
                 arrow.textContent = arrowDirection;
                 arrow.style.visibility = 'visible';
+                arrow.style.transform = 'translate(-50%, -50%) scale(1.1)';
                 
                 cross.textContent = '×';
                 cross.style.visibility = 'visible';
+                cross.style.opacity = '0';
+                setTimeout(() => cross.style.opacity = '1', 50);
                 setPosition(cross, crossPosition);
                 
                 expectedResponses = [arrowDirection, crossPosition];
                 userResponses = [];
+                message.textContent = 'Pfeilrichtung zuerst!';
             }, 1000 + Math.random() * 1000);
         }
 
+        function flashFeedback(isCorrect) {
+            container.style.background = isCorrect 
+                ? 'linear-gradient(to bottom, #b8e994, #78e08f)'
+                : 'linear-gradient(to bottom, #ff7979, #eb4d4b)';
+            setTimeout(() => {
+                container.style.background = 'linear-gradient(to bottom, #ffffff, #fff1e6)';
+            }, 200);
+        }
+
         function calculatePerformance(results) {
-            if (results.length === 0) return 0;
+            if (results.length === 0) return { avgTime: 0, errorRate: 0 };
             const avgTime = results.reduce((a, b) => a + b.time, 0) / results.length;
             const errorRate = results.filter(r => !r.correct).length / results.length;
-            return {
-                avgTime: avgTime,
-                errorRate: errorRate
-            };
+            return { avgTime, errorRate };
+        }
+
+        function updateStats() {
+            stats.textContent = 
+                `Phase: ${currentPhase === 'practice' ? 'Übung' : 'Test'} | ` +
+                `${currentPhase === 'practice' ? practiceResults.length : testResults.length}/${currentPhase === 'practice' ? 5 : 10} | ` +
+                `Fehler: ${errors}`;
         }
 
         function handleResponse(response) {
@@ -214,79 +273,82 @@
             userResponses.push(response);
             
             if (userResponses.length === 1) {
-                // First response (arrow)
                 if (response === arrowDirection) {
-                    message.textContent = "Gut! Jetzt die Kreuzposition...";
+                    message.textContent = "Gut! Jetzt Kreuzposition!";
+                    flashFeedback(true);
                 } else {
-                    message.textContent = "Falsch! Weiter mit Kreuzposition...";
+                    message.textContent = "Falsche Richtung! Kreuzposition!";
+                    flashFeedback(false);
+                    errors++;
                 }
             } else if (userResponses.length === 2) {
-                // Second response (cross)
                 const reactionTime = Date.now() - startTime;
                 const correct = userResponses[0] === expectedResponses[0] && 
                               userResponses[1] === expectedResponses[1];
                 
-                const result = {
-                    time: reactionTime,
-                    correct: correct
-                };
+                const result = { time: reactionTime, correct };
+                if (!correct) errors++;
 
                 if (currentPhase === 'practice') {
                     practiceResults.push(result);
-                    progress.textContent = `Übungsphase: ${practiceResults.length}/5 Durchgänge`;
+                    progress.textContent = `Übung: ${practiceResults.length}/5`;
+                    updateStats();
                     
                     if (practiceResults.length === 5) {
                         const performance = calculatePerformance(practiceResults);
-                        if (performance.errorRate > 0.4) {
+                        if (performance.errorRate > 0.4 && practiceAttempts < 2) {
                             practiceAttempts++;
-                            if (practiceAttempts < 3) {
-                                message.textContent = "Zu viele Fehler. Übungsphase wird wiederholt.";
-                                setTimeout(startPracticePhase, 2000);
-                                return;
-                            }
+                            message.textContent = `Zu viele Fehler (${errors}/5). Übung wird wiederholt.`;
+                            setTimeout(startPracticePhase, 2000);
+                            return;
                         }
-                        message.textContent = "Übungsphase abgeschlossen. Testphase beginnt...";
+                        message.textContent = "Übung abgeschlossen! Test beginnt...";
                         setTimeout(startTestPhase, 2000);
                         return;
                     }
                 } else if (currentPhase === 'test') {
                     testResults.push(result);
-                    progress.textContent = `Testphase: ${testResults.length}/10 Durchgänge`;
+                    progress.textContent = `Test: ${testResults.length}/10`;
+                    updateStats();
                     
                     if (testResults.length === 10) {
                         const performance = calculatePerformance(testResults);
                         if (performance.errorRate <= 0.2) {
-                            const percentile = 50; // Vereinfachte Berechnung
-                            message.textContent = `Test abgeschlossen!\nProzentrang: ${percentile}\nDurchschnittliche Zeit: ${performance.avgTime.toFixed(0)}ms`;
+                            const percentile = calculatePercentile(performance.avgTime);
+                            message.innerHTML = 
+                                `<b>Test abgeschlossen!</b><br>` +
+                                `Durchschnitt: ${performance.avgTime.toFixed(0)}ms<br>` +
+                                `Prozentrang: ${percentile}%`;
                         } else {
-                            message.textContent = "Zu viele Fehler im Test. Bitte wiederholen Sie den Test.";
+                            message.textContent = "Zu viele Fehler! Test wiederholen? Klick!";
+                            state = 'ready';
                         }
                         return;
                     }
                 }
 
-                message.textContent = correct ? 
-                    `Korrekt! Zeit: ${reactionTime}ms` : 
-                    "Falsch! Weiter zum nächsten Versuch...";
-                    
+                message.textContent = correct 
+                    ? `Korrekt! Zeit: ${reactionTime}ms` 
+                    : "Falsch! Nächster Versuch...";
+                flashFeedback(correct);
                 setTimeout(startTrial, 1500);
             }
         }
 
+        function calculatePercentile(avgTime) {
+            if (avgTime < 800) return 95;
+            if (avgTime < 1000) return 75;
+            if (avgTime < 1200) return 50;
+            if (avgTime < 1400) return 25;
+            return 10;
+        }
+
         document.addEventListener('keydown', (event) => {
             switch(event.key) {
-                case 'ArrowUp':
-                    handleResponse('↑');
-                    break;
-                case 'ArrowRight':
-                    handleResponse('→');
-                    break;
-                case 'ArrowDown':
-                    handleResponse('↓');
-                    break;
-                case 'ArrowLeft':
-                    handleResponse('←');
-                    break;
+                case 'ArrowUp': handleResponse('↑'); break;
+                case 'ArrowRight': handleResponse('→'); break;
+                case 'ArrowDown': handleResponse('↓'); break;
+                case 'ArrowLeft': handleResponse('←'); break;
             }
         });
 
@@ -298,7 +360,6 @@
             }
         });
 
-        // Start with first instruction
         showNextInstruction();
     </script>
 </body>
