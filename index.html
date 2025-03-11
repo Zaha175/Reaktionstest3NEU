@@ -50,6 +50,16 @@
             transform: translateX(-50%);
         }
 
+        /* Symbole-Bereich: Zone in der Mitte */
+        #symbols-area {
+            position: absolute;
+            top: 80px;
+            left: 0;
+            right: 0;
+            height: 240px; /* Fester Bereich für Symbole */
+            pointer-events: none; /* Durchklicken erlauben */
+        }
+
         #arrow {
             font-size: 4em;
             position: absolute;
@@ -81,6 +91,8 @@
             border-radius: 10px;
             text-align: center;
             color: #2c3e50;
+            max-width: 90%;
+            z-index: 10; /* Stellt sicher, dass die Nachricht über anderen Elementen liegt */
         }
 
         #direction-buttons {
@@ -121,9 +133,14 @@
     <div id="test-container">
         <div id="stats">Phase: Übung | 0/5 | Fehler: 0</div>
         <div id="progress"></div>
-        <div id="arrow">→</div>
-        <div id="cross">×</div>
+        
+        <div id="symbols-area">
+            <div id="arrow">→</div>
+            <div id="cross">×</div>
+        </div>
+        
         <div id="message"></div>
+        
         <div id="direction-buttons">
             <button class="direction-btn" data-direction="↑">↑</button>
             <button class="direction-btn" data-direction="↓">↓</button>
@@ -139,6 +156,7 @@
         const arrow = document.getElementById('arrow');
         const cross = document.getElementById('cross');
         const message = document.getElementById('message');
+        const symbolsArea = document.getElementById('symbols-area');
 
         let state = 'instruction';
         let instructionStep = 0;
@@ -162,27 +180,34 @@
         ];
 
         function setPosition(element, position) {
+            // Positionen für Symbole innerhalb des Symbolbereichs
+            const areaRect = symbolsArea.getBoundingClientRect();
+            const centerX = areaRect.width / 2;
+            const centerY = areaRect.height / 2;
+            
             element.style.top = '';
             element.style.left = '';
+            element.style.transform = 'translate(-50%, -50%)';
+            
+            // Positionen relativ zum Symbolbereich
             switch(position) {
                 case '↑':
-                    element.style.top = '40px';
+                    element.style.top = '20%';
                     element.style.left = '50%';
                     break;
                 case '↓':
-                    element.style.top = '410px';
+                    element.style.top = '80%';
                     element.style.left = '50%';
                     break;
                 case '←':
-                    element.style.left = '40px';
+                    element.style.left = '20%';
                     element.style.top = '50%';
                     break;
                 case '→':
-                    element.style.left = '560px';
+                    element.style.left = '80%';
                     element.style.top = '50%';
                     break;
             }
-            element.style.transform = 'translate(-50%, -50%)';
         }
 
         function getRandomDirection() {
